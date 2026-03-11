@@ -122,6 +122,17 @@ vim.o.breakindent = true
 -- Enable undo/redo changes even after closing and reopening a file
 vim.o.undofile = true
 
+-- Tab and Indentation settings
+vim.opt.shiftwidth = 2 -- Size of an indent
+vim.opt.tabstop = 2 -- Number of spaces tabs count for
+vim.opt.softtabstop = 2 -- Number of spaces for editing
+vim.opt.expandtab = true -- Use spaces instead of tabs (Vital for Haskell)
+
+-- Keymaps to move highlighted blocks in Visual Mode
+-- This lets you press > or < and keep the code highlighted
+vim.keymap.set('v', '>', '>gv')
+vim.keymap.set('v', '<', '<gv')
+
 -- Case-insensitive searching UNLESS \C or one or more capital letters in the search term
 vim.o.ignorecase = true
 vim.o.smartcase = true
@@ -198,10 +209,10 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
 -- TIP: Disable arrow keys in normal mode
--- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
--- vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
--- vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
--- vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
+vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
+vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
+vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
+vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
 
 -- Keybinds to make split navigation easier.
 --  Use CTRL+<hjkl> to switch between windows
@@ -603,6 +614,7 @@ require('lazy').setup({
       --  See `:help lsp-config` for information about keys and how to configure
       ---@type table<string, vim.lsp.Config>
       local servers = {
+        hls = {},
         -- clangd = {},
         -- gopls = {},
         -- pyright = {},
@@ -764,7 +776,12 @@ require('lazy').setup({
         --
         -- See :h blink-cmp-config-keymap for defining your own keymap
         preset = 'default',
+        -- Enter to accept the hint
+        ['<CR>'] = { 'accept', 'fallback' },
 
+        -- Tab to navigate the list
+        ['<Tab>'] = { 'select_next', 'fallback' },
+        ['<S-Tab>'] = { 'select_prev', 'fallback' },
         -- For more advanced Luasnip keymaps (e.g. selecting choice nodes, expansion) see:
         --    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps
       },
@@ -870,36 +887,22 @@ require('lazy').setup({
     end,
   },
 
-  { -- Highlight, edit, and navigate code
+  {
     'nvim-treesitter/nvim-treesitter',
-    lazy = false,
     build = ':TSUpdate',
-    branch = 'main',
-    -- [[ Configure Treesitter ]] See `:help nvim-treesitter-intro`
+    event = { 'BufReadPost', 'BufNewFile' },
     config = function()
-      local parsers = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' }
-      require('nvim-treesitter').install(parsers)
-      vim.api.nvim_create_autocmd('FileType', {
-        callback = function(args)
-          local buf, filetype = args.buf, args.match
+      require('nvim-treesitter').setup {
+        ensure_installed = { 'lua', 'vim', 'bash', 'markdown', 'haskell' },
 
-          local language = vim.treesitter.language.get_lang(filetype)
-          if not language then return end
+        highlight = {
+          enable = true,
+        },
 
-          -- check if parser exists and load it
-          if not vim.treesitter.language.add(language) then return end
-          -- enables syntax highlighting and other treesitter features
-          vim.treesitter.start(buf, language)
-
-          -- enables treesitter based folds
-          -- for more info on folds see `:help folds`
-          -- vim.wo.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
-          -- vim.wo.foldmethod = 'expr'
-
-          -- enables treesitter based indentation
-          vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
-        end,
-      })
+        indent = {
+          enable = true,
+        },
+      }
     end,
   },
 
