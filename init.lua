@@ -886,27 +886,18 @@ require('lazy').setup({
       --  Check out: https://github.com/nvim-mini/mini.nvim
     end,
   },
-
   {
     'nvim-treesitter/nvim-treesitter',
+    tag = 'v0.9.3', -- ← add this line
     build = ':TSUpdate',
     event = { 'BufReadPost', 'BufNewFile' },
-    config = function()
-      require('nvim-treesitter').setup {
-        ensure_installed = { 'lua', 'vim', 'bash', 'markdown', 'haskell' },
-
-        highlight = {
-          enable = true,
-        },
-
-        indent = {
-          enable = true,
-        },
-      }
-    end,
-  },
-
-  -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
+    opts = {
+      ensure_installed = { 'c', 'lua', 'vim', 'vimdoc', 'query', 'haskell' },
+      highlight = { enable = true },
+      indent = { enable = true },
+    },
+    config = function(_, opts) require('nvim-treesitter.configs').setup(opts) end,
+  }, -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
   -- place them in the correct locations.
 
